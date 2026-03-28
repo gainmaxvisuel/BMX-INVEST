@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compte - BMX</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+color:#111;
+}
+
+/* ===== CARTE SLIDER ===== */
+.card-slider{
+width:92%;
+height:160px;
+margin:15px auto;
+border-radius:20px;
+overflow:hidden;
+position:relative;
+color:#fff;
+}
+
+.card-slide{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+padding:20px;
+opacity:0;
+transition:all 1s ease;
+transform:scale(1.1);
+}
+
+.card-slide.active{
+opacity:1;
+transform:scale(1);
+}
+
+.bg1{
+background:linear-gradient(135deg,#ffb300,#ff6a00,#ff3c00);
+background-size:300% 300%;
+animation:move 6s infinite;
+}
+
+.bg2{
+background:linear-gradient(135deg,#3b82f6,#06b6d4,#22c55e);
+background-size:300% 300%;
+animation:move 6s infinite;
+}
+
+.bg3{
+background:linear-gradient(135deg,#8b5cf6,#ec4899,#f43f5e);
+background-size:300% 300%;
+animation:move 6s infinite;
+}
+
+@keyframes move{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+.card-title{
+font-size:14px;
+opacity:0.9;
+}
+
+.card-name{
+font-size:20px;
+font-weight:bold;
+margin-top:5px;
+}
+
+.card-balance{
+font-size:24px;
+font-weight:bold;
+margin-top:10px;
+}
+
+/* ===== ACTIONS ===== */
+.actions{
+display:flex;
+gap:10px;
+padding:10px;
+}
+
+.btn{
+flex:1;
+height:80px;
+border-radius:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.deposit{
+background:#3b82f6;
+color:#fff;
+}
+
+.withdraw{
+background:#fbbf24;
+color:#000;
+}
+
+.transaction{
+background:#22c55e;
+color:#fff;
+}
+
+/* ===== LISTE VERTICALE ===== */
+.menu-list{
+margin:15px;
+}
+
+.menu-item-rect{
+background:#fff;
+border:1px solid #e5e7eb;
+border-radius:12px;
+padding:15px;
+margin-bottom:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+cursor:pointer;
+font-size:15px;
+}
+
+.menu-item-rect:hover{
+background:#f1f5f9;
+}
+
+/* ===== MENU FIXE ===== */
+.menu{
+position:fixed;
+bottom:0;
+width:100%;
+background:#ffffff;
+display:flex;
+justify-content:space-around;
+align-items:center;
+padding:12px 0;
+border-top:1px solid #ddd;
+box-shadow:0 -2px 10px rgba(0,0,0,0.08);
+}
+
+.menu-item{
+text-align:center;
+font-size:13px;
+color:#777;
+flex:1;
+}
+
+.menu-item div{
+font-size:22px;
+}
+
+.menu-item.active{
+color:#3b82f6;
+font-weight:bold;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- CARTE SLIDER -->
+<div class="card-slider">
+
+<div class="card-slide bg1 active" id="c1">
+<div class="card-title">Utilisateur</div>
+<div class="card-name" id="username1">...</div>
+<div class="card-title">Solde</div>
+<div class="card-balance" id="balance1">0 FCFA</div>
+</div>
+
+<div class="card-slide bg2" id="c2">
+<div class="card-title">Compte BMX</div>
+<div class="card-name">Investissement actif</div>
+<div class="card-balance">Évolution dynamique</div>
+</div>
+
+<div class="card-slide bg3" id="c3">
+<div class="card-title">Statut</div>
+<div class="card-name">Membre actif</div>
+<div class="card-balance">Bonus en cours</div>
+</div>
+
+</div>
+
+<!-- ACTIONS -->
+<div class="actions">
+<div class="btn deposit" onclick="location.href='deposit.html'">➕ Dépôt</div>
+<div class="btn withdraw" onclick="location.href='withdraw.html'">⬇ Retrait</div>
+<div class="btn transaction" onclick="location.href='transactions.html'">📊 Transactions</div>
+</div>
+
+<!-- MENU VERTICAL -->
+<div class="menu-list">
+
+<div class="menu-item-rect" onclick="location.href='transactions.html'">
+📄 Historique des dépôts <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="location.href='transactions.html'">
+📄 Historique des retraits <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="location.href='my_products.html'">
+📦 Mes produits <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="window.open('https://t.me/BMX2202','_blank')">
+📢 Canal Telegram <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="window.open('https://t.me/+Rj2qsQIj1t1iOTA8','_blank')">
+👥 Groupe Telegram <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="window.open('https://t.me/GAININVEST2','_blank')">
+🧑‍💻 Service client <span>›</span>
+</div>
+
+<div class="menu-item-rect" onclick="logout()">
+🚪 Déconnexion <span>›</span>
+</div>
+
+</div>
+
+<!-- MENU FIXE -->
+<div class="menu">
+<div class="menu-item" onclick="location.href='home.html'">
+<div>🏠</div>Accueil
+</div>
+
+<div class="menu-item" onclick="location.href='product.html'">
+<div>📦</div>Produit
+</div>
+
+<div class="menu-item" onclick="location.href='team.html'">
+<div>👥</div>Équipe
+</div>
+
+<div class="menu-item active">
+<div>👤</div>Compte
+</div>
+</div>
+
+<script>
+
+const client = supabase.createClient(
+"https://qixmtmfcscjkneodbvgx.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpeG10bWZjc2Nqa25lb2Ridmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDY1NzUsImV4cCI6MjA5MDI4MjU3NX0.9rLqMeXfAKAC6GHt4SOe0sXjiEB7bfG5c_4PcI6gBu4"
+);
+
+/* USER */
+async function loadUser(){
+
+let user = JSON.parse(localStorage.getItem("user"));
+if(!user){
+window.location.href="login.html";
+return;
+}
+
+const { data } = await client
+.from("users")
+.select("*")
+.eq("id", user.id)
+.single();
+
+if(data){
+document.getElementById("username1").innerText = data.nom;
+document.getElementById("balance1").innerText = data.solde + " FCFA";
+}
+
+}
+
+loadUser();
+
+/* SLIDER CARTE */
+let slides = [c1, c2, c3];
+let i = 0;
+
+setInterval(()=>{
+slides[i].classList.remove("active");
+i = (i + 1) % slides.length;
+slides[i].classList.add("active");
+},4000);
+
+/* LOGOUT */
+function logout(){
+localStorage.removeItem("user");
+window.location.href="login.html";
+}
+
+</script>
+
+</body>
+</html>

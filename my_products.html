@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes produits</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+font-size:16px;
+}
+
+/* TOP BAR */
+.topbar{
+display:flex;
+align-items:center;
+padding:15px;
+background:#fff;
+box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.topbar h3{
+font-size:22px;
+margin:0;
+}
+
+.back{
+font-size:24px;
+cursor:pointer;
+margin-right:10px;
+}
+
+/* PRODUCT CARD */
+.product-card{
+background:#fff;
+margin:12px;
+padding:18px;
+border-radius:15px;
+box-shadow:0 2px 10px rgba(0,0,0,0.06);
+display:flex;
+gap:12px;
+align-items:center;
+}
+
+/* IMAGE */
+.product-image{
+width:90px;
+height:90px;
+object-fit:cover;
+border-radius:10px;
+}
+
+/* CONTENT */
+.product-content{
+flex:1;
+}
+
+/* HEADER */
+.product-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:8px;
+}
+
+.product-name{
+font-weight:bold;
+font-size:18px;
+}
+
+/* STATUS */
+.product-status{
+font-size:13px;
+padding:6px 12px;
+border-radius:10px;
+color:#fff;
+}
+
+.active{ background:#22c55e; }
+.inactive{ background:#ef4444; }
+
+/* BODY TEXT */
+.product-body{
+font-size:15px;
+line-height:1.8;
+color:#333;
+}
+</style>
+
+</head>
+<body>
+
+<!-- TOP -->
+<div class="topbar">
+<div class="back" onclick="location.href='account.html'">⬅</div>
+<h3>Mes produits</h3>
+</div>
+
+<!-- PRODUCTS -->
+<div id="productsList"></div>
+
+<script>
+
+const client = supabase.createClient(
+"https://qixmtmfcscjkneodbvgx.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpeG10bWZjc2Nqa25lb2Ridmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDY1NzUsImV4cCI6MjA5MDI4MjU3NX0.9rLqMeXfAKAC6GHt4SOe0sXjiEB7bfG5c_4PcI6gBu4"
+);
+
+function getUser(){
+let user = JSON.parse(localStorage.getItem("user"));
+if(!user){
+window.location.href="login.html";
+return null;
+}
+return user;
+}
+
+async function loadProducts(){
+
+let user = getUser();
+if(!user) return;
+
+const { data, error } = await client
+.from("vip_achats")
+.select("*, vip_plans(*)")
+.eq("user_id", user.id)
+.order("date_achat", { ascending:false });
+
+if(error){
+console.log(error);
+return;
+}
+
+let html = "";
+
+data.forEach(p=>{
+
+let statusClass = p.actif ? "active" : "inactive";
+let statusText = p.actif ? "En cours" : "Inactif";
+
+let image = p.vip_plans && p.vip_plans.image_url 
+? p.vip_plans.image_url 
+: "BMX.png";
+
+html += `
+<div class="product-card">
+
+  <img class="product-image" src="${image}">
+
+  <div class="product-content">
+
+    <div class="product-header">
+      <div class="product-name">
+        ${p.vip_plans ? p.vip_plans.nom : "Plan VIP"}
+      </div>
+
+      <div class="product-status ${statusClass}">
+        ${statusText}
+      </div>
+    </div>
+
+    <div class="product-body">
+      <div>💰 Montant : ${p.montant} FCFA</div>
+      <div>📈 Gain journalier : ${p.gain_journalier} FCFA</div>
+      <div>⏳ Durée : ${p.jours_restants} jours</div>
+      <div>📅 Date : ${new Date(p.date_achat).toLocaleString()}</div>
+    </div>
+
+  </div>
+
+</div>
+`;
+
+});
+
+document.getElementById("productsList").innerHTML = html || "<p style='padding:15px;'>Aucun produit</p>";
+
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>

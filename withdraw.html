@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrait</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+/* bouton retour */
+.back-btn{
+position:fixed;
+top:15px;
+left:15px;
+font-size:22px;
+background:#fff;
+width:40px;
+height:40px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+cursor:pointer;
+}
+
+/* box */
+.box{
+background:#fff;
+padding:20px;
+border-radius:15px;
+width:90%;
+max-width:400px;
+box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+}
+
+input, select, button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+button{
+background:#f59e0b;
+color:#fff;
+font-weight:bold;
+border:none;
+cursor:pointer;
+}
+
+/* erreurs */
+#error{
+color:red;
+margin-top:10px;
+text-align:center;
+}
+
+/* loader */
+.loader{
+margin:15px auto;
+border:4px solid #f3f3f3;
+border-top:4px solid #f59e0b;
+border-radius:50%;
+width:30px;
+height:30px;
+animation:spin 1s linear infinite;
+display:none;
+}
+
+@keyframes spin{
+0%{ transform:rotate(0deg); }
+100%{ transform:rotate(360deg); }
+}
+
+/* preview frais */
+#preview{
+margin-top:10px;
+font-size:14px;
+background:#f9fafb;
+padding:10px;
+border-radius:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="back-btn" onclick="goHome()">←</div>
+
+<div class="box">
+<h2>🏧 Retrait</h2>
+
+<input type="text" id="nom" placeholder="Nom complet">
+
+<select id="code_pays">
+<option value="+226">Burkina Faso (+226)</option>
+<option value="+228">Togo (+228)</option>
+<option value="+229">Bénin (+229)</option>
+<option value="+225">Côte d'Ivoire (+225)</option>
+<option value="+237">Cameroun (+237)</option>
+<option value="+221">Sénégal (+221)</option>
+</select>
+
+<input type="text" id="numero" placeholder="Numéro">
+
+<select id="operateur">
+<option value="Orange Money">Orange Money</option>
+<option value="Moov Money">Moov Money</option>
+<option value="MTN Mobile Money">MTN Mobile Money</option>
+<option value="Wave">Wave</option>
+<option value="T-Money">T-Money</option>
+<option value="Ligdicash">Ligdicash</option>
+<option value="Togocel">Togocel</option>
+</select>
+
+<input type="number" id="montant" placeholder="Montant (min 1000)">
+
+<!-- PREVIEW FRAIS -->
+<div id="preview" style="display:none;">
+<p>💰 Frais (13%) : <span id="frais"></span></p>
+<p>📥 Montant à recevoir : <span id="net"></span></p>
+</div>
+
+<button onclick="retirer()">Valider retrait</button>
+
+<div id="loader" class="loader"></div>
+<div id="error"></div>
+
+</div>
+
+<script>
+
+const client = supabase.createClient(
+"https://qixmtmfcscjkneodbvgx.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpeG10bWZjc2Nqa25lb2Ridmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDY1NzUsImV4cCI6MjA5MDI4MjU3NX0.9rLqMeXfAKAC6GHt4SOe0sXjiEB7bfG5c_4PcI6gBu4"
+);
+
+/* retour */
+function goHome(){
+window.location.href = "home.html";
+}
+
+/* user */
+function getUser(){
+let u = localStorage.getItem("user");
+if(!u){
+window.location.href="login.html";
+return null;
+}
+return JSON.parse(u);
+}
+
+/* pays auto */
+function setUserCountry(){
+let user = getUser();
+if(!user) return;
+
+let select = document.getElementById("code_pays");
+if(user.pays_code){
+select.value = user.pays_code;
+}
+}
+
+/* calcul frais dynamique */
+document.getElementById("montant").addEventListener("input", function(){
+
+let montant = parseFloat(this.value);
+let preview = document.getElementById("preview");
+
+if(!montant || montant <= 0){
+preview.style.display = "none";
+return;
+}
+
+let frais = montant * 0.13;
+let net = montant - frais;
+
+document.getElementById("frais").innerText = frais.toFixed(2);
+document.getElementById("net").innerText = net.toFixed(2);
+
+preview.style.display = "block";
+
+});
+
+/* retrait */
+async function retirer(){
+
+let errorBox = document.getElementById("error");
+let loader = document.getElementById("loader");
+
+errorBox.innerText = "";
+loader.style.display = "block";
+
+let user = getUser();
+if(!user){
+loader.style.display = "none";
+return;
+}
+
+let nom = document.getElementById("nom").value;
+let codePays = document.getElementById("code_pays").value;
+let numero = document.getElementById("numero").value;
+let operateur = document.getElementById("operateur").value;
+let montant = parseFloat(document.getElementById("montant").value);
+
+let numeroComplet = codePays + numero;
+
+/* validations */
+if(!nom || !numero || !montant){
+errorBox.innerText = "⚠️ Remplir toutes les cases";
+loader.style.display = "none";
+return;
+}
+
+if(montant < 1000){
+errorBox.innerText = "⚠️ Montant minimum = 1000";
+loader.style.display = "none";
+return;
+}
+
+/* appel backend */
+const { error } = await client.rpc("create_withdrawal", {
+p_user_id: user.id,
+p_nom: nom,
+p_numero: numeroComplet,
+p_operateur: operateur,
+p_montant: montant
+});
+
+loader.style.display = "none";
+
+if(error){
+errorBox.innerText = error.message;
+}else{
+window.location.href = "home.html";
+}
+
+}
+
+/* init */
+window.onload = function(){
+setUserCountry();
+};
+
+</script>
+
+</body>
+</html>

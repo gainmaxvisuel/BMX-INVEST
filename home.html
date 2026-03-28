@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMX - Accueil</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+background:#f5f6fa;
+font-family:Arial;
+color:#111;
+overflow-x:hidden;
+}
+
+/* SLIDER */
+.slider{
+width:92%;
+height:180px;
+margin:15px auto;
+border-radius:20px;
+overflow:hidden;
+position:relative;
+}
+
+.slide{
+width:100%;
+height:100%;
+position:absolute;
+background-size:cover;
+background-position:center;
+transition:all 1s ease;
+transform:scale(1.2);
+opacity:0;
+}
+
+.slide.active{
+opacity:1;
+transform:scale(1);
+}
+
+.flash{
+position:absolute;
+width:100%;
+height:100%;
+background:#fff;
+opacity:0;
+}
+
+.slider-text{
+position:absolute;
+bottom:10px;
+left:10px;
+right:10px;
+background:rgba(0,0,0,0.5);
+color:#fff;
+padding:10px;
+border-radius:10px;
+font-size:13px;
+}
+
+/* CARDS */
+.cards{
+display:flex;
+gap:10px;
+padding:0 10px;
+}
+
+.card{
+flex:1;
+background:#fff;
+padding:15px;
+border-radius:15px;
+box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* REFRESH */
+.refresh{
+margin:10px;
+padding:15px;
+background:#fff;
+border-radius:15px;
+text-align:center;
+cursor:pointer;
+}
+
+/* ACTIONS */
+.actions{
+display:flex;
+gap:10px;
+padding:10px;
+}
+
+.btn{
+flex:1;
+height:80px;
+border-radius:20px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.deposit{
+background:#3b82f6;
+color:#fff;
+}
+
+.withdraw{
+background:#fbbf24;
+color:#000;
+}
+
+/* ABOUT */
+.alert{
+margin:10px;
+padding:12px;
+background:#fff;
+border-radius:12px;
+overflow:hidden;
+height:260px;
+}
+
+.vertical-scroll{
+display:flex;
+flex-direction:column;
+animation: scrollUp 50s linear infinite;
+}
+
+@keyframes scrollUp{
+0%{ transform:translateY(100%); }
+100%{ transform:translateY(-100%); }
+}
+
+.about-section{
+margin-bottom:25px;
+}
+
+.about-section img{
+width:100%;
+height:120px;
+object-fit:cover;
+border-radius:10px;
+margin-bottom:5px;
+}
+
+.about-title{
+font-weight:bold;
+font-size:14px;
+color:#3b82f6;
+margin-bottom:5px;
+}
+
+.about-text{
+font-size:13px;
+color:#333;
+line-height:1.5;
+}
+
+/* MENU FIXE PREMIUM */
+.menu{
+position:fixed;
+bottom:0;
+width:100%;
+background:#ffffff;
+display:flex;
+justify-content:space-around;
+align-items:center;
+padding:12px 0;
+border-top:1px solid #ddd;
+box-shadow:0 -2px 10px rgba(0,0,0,0.08);
+z-index:999;
+}
+
+.menu-item{
+text-align:center;
+font-size:13px;
+color:#777;
+flex:1;
+padding:5px 0;
+}
+
+.menu-item div{
+font-size:24px;
+margin-bottom:3px;
+}
+
+.menu-item.active{
+color:#3b82f6;
+font-weight:bold;
+}
+
+/* SUPPORT */
+.support{
+position:fixed;
+right:15px;
+bottom:90px;
+width:60px;
+height:60px;
+background:#3b82f6;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+color:#fff;
+font-size:25px;
+cursor:pointer;
+}
+
+.popup{
+position:fixed;
+bottom:160px;
+right:15px;
+background:#fff;
+padding:15px;
+border-radius:15px;
+display:none;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+.popup div{
+padding:10px;
+margin-top:8px;
+border-radius:10px;
+background:#f1f1f1;
+cursor:pointer;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- SLIDER -->
+<div class="slider">
+
+<div class="flash" id="flash"></div>
+
+<div class="slide active" id="s1"
+style="background-image:url('https://images.unsplash.com/photo-1602524814170-1d2c0b5c1f1a')">
+<div class="slider-text">🚴 BMX : discipline, performance et progression</div>
+</div>
+
+<div class="slide" id="s2"
+style="background-image:url('https://images.unsplash.com/photo-1508606572321-901ea443707f')">
+<div class="slider-text">🤝 Développez votre réseau avec le parrainage</div>
+</div>
+
+<div class="slide" id="s3"
+style="background-image:url('https://images.unsplash.com/photo-1517649763962-0c623066013b')">
+<div class="slider-text">💰 Investissement et évolution des gains</div>
+</div>
+
+</div>
+
+<!-- CARDS -->
+<div class="cards">
+<div class="card">💼 Solde <h3 id="solde">0 FCFA</h3></div>
+<div class="card">💰 Commission <h3 id="commission">0 FCFA</h3></div>
+</div>
+
+<div class="refresh" onclick="loadData()">🔄 Actualiser</div>
+
+<!-- ACTIONS -->
+<div class="actions">
+<div class="btn deposit" onclick="location.href='deposit.html'">➕ Dépôt</div>
+<div class="btn withdraw" onclick="location.href='withdraw.html'">⬇ Retrait</div>
+</div>
+
+<!-- A PROPOS -->
+<div class="alert">
+<div id="about" class="vertical-scroll"></div>
+</div>
+
+<!-- SUPPORT -->
+<div class="support" onclick="toggleSupport()">💬</div>
+
+<div class="popup" id="supportBox">
+<div onclick="openLink('http://t.me/Melissajoan1')">💬 Ligne 1</div>
+<div onclick="openLink('https://t.me/GAININVEST2')">💬 Ligne 2</div>
+</div>
+
+<!-- MENU -->
+<div class="menu">
+<div class="menu-item active">
+<div>🏠</div>Accueil
+</div>
+<div class="menu-item" onclick="location.href='product.html'">
+<div>📦</div>Produit
+</div>
+<div class="menu-item" onclick="location.href='team.html'">
+<div>👥</div>Équipe
+</div>
+<div class="menu-item" onclick="location.href='account.html'">
+<div>👤</div>Compte
+</div>
+</div>
+
+<script>
+
+const client = supabase.createClient(
+"https://qixmtmfcscjkneodbvgx.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpeG10bWZjc2Nqa25lb2Ridmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDY1NzUsImV4cCI6MjA5MDI4MjU3NX0.9rLqMeXfAKAC6GHt4SOe0sXjiEB7bfG5c_4PcI6gBu4"
+);
+
+/* SESSION */
+function getUserSession(){
+let user = localStorage.getItem("user");
+if(!user){
+window.location.href = "login.html";
+return null;
+}
+return JSON.parse(user);
+}
+
+/* LOAD DATA */
+async function loadData(){
+let user = getUserSession();
+if(!user) return;
+
+const { data } = await client
+.from("users")
+.select("*")
+.eq("id", user.id)
+.single();
+
+if(data){
+document.getElementById("solde").innerText = data.solde + " FCFA";
+document.getElementById("commission").innerText = (data.total_commission || 0) + " FCFA";
+}
+}
+
+/* ABOUT */
+document.addEventListener("DOMContentLoaded", () => {
+
+const aboutContent = [
+{
+title:"📌 HISTOIRE DU BMX",
+img:"https://images.unsplash.com/photo-1600431521340-491eca880813",
+text:"Le BMX est né dans les années 1970 aux États-Unis. Il a été développé par des jeunes passionnés qui voulaient reproduire les sensations du motocross avec des vélos. Avec le temps, le BMX est devenu un sport structuré avec des règles, des compétitions officielles et une reconnaissance mondiale."
+},
+{
+title:"🏁 STRUCTURATION",
+img:"https://images.unsplash.com/photo-1599058917212-d750089bc07e",
+text:"Des fédérations ont été créées pour organiser les compétitions et encadrer les pratiquants. Les pistes ont été standardisées et les catégories définies selon les niveaux. Cela a permis au BMX de devenir un sport professionnel."
+},
+{
+title:"🌍 RECONNAISSANCE",
+img:"https://images.unsplash.com/photo-1520975922284-9c6c1b0f5c8f",
+text:"Le BMX a été reconnu officiellement par l’UCI en 1993. Cette reconnaissance a permis son développement international et son intégration dans les compétitions officielles à travers le monde."
+},
+{
+title:"🏆 OLYMPIQUE",
+img:"https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf",
+text:"Le BMX est devenu une discipline olympique en 2008, ce qui a renforcé sa visibilité mondiale et attiré de nombreux athlètes professionnels."
+},
+{
+title:"💰 INVESTISSEMENT",
+img:"https://images.unsplash.com/photo-1567427018141-0584cfcbf1b8",
+text:"Notre plateforme repose sur un système de progression basé sur l’engagement, l’investissement et le développement du réseau. Chaque utilisateur peut évoluer et générer des gains à travers son activité."
+}
+];
+
+document.getElementById("about").innerHTML =
+aboutContent.map(s=>`
+<div class="about-section">
+<img src="${s.img}">
+<div class="about-title">${s.title}</div>
+<div class="about-text">${s.text}</div>
+</div>
+`).join();
+
+});
+
+/* SUPPORT */
+function toggleSupport(){
+let box = document.getElementById("supportBox");
+box.style.display = box.style.display === "block" ? "none" : "block";
+}
+
+function openLink(url){
+window.open(url);
+}
+
+/* SLIDER */
+let slides = [s1, s2, s3];
+let i = 0;
+
+setInterval(()=>{
+flash.style.opacity=0.8;
+
+setTimeout(()=>{
+flash.style.opacity=0;
+
+slides[i].classList.remove("active");
+i = (i + 1) % slides.length;
+slides[i].classList.add("active");
+
+},200);
+
+},4000);
+
+/* INIT */
+loadData();
+
+</script>
+
+</body>
+</html>

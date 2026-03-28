@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transactions</title>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:#f5f6fa;
+}
+
+/* ===== TOP ===== */
+.topbar{
+display:flex;
+align-items:center;
+padding:15px;
+background:#fff;
+box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.back{
+font-size:22px;
+cursor:pointer;
+margin-right:10px;
+}
+
+/* ===== SLIDER ===== */
+.slider{
+width:92%;
+height:150px;
+margin:15px auto;
+border-radius:15px;
+overflow:hidden;
+position:relative;
+}
+
+.slide{
+position:absolute;
+width:100%;
+height:100%;
+background-size:cover;
+background-position:center;
+opacity:0;
+transition:1s;
+}
+
+.slide.active{
+opacity:1;
+}
+
+/* ===== TABS ===== */
+.tabs{
+display:flex;
+justify-content:space-between;
+margin:15px;
+background:#fff;
+border-radius:12px;
+padding:5px;
+box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+
+.tab{
+flex:1;
+text-align:center;
+padding:10px;
+cursor:pointer;
+border-radius:10px;
+font-weight:bold;
+color:#666;
+}
+
+.tab.active{
+background:#3b82f6;
+color:#fff;
+}
+
+/* ===== SECTION ===== */
+.section{
+margin:15px;
+}
+
+/* ===== CARD TRANSACTION ===== */
+.tx-card{
+background:#fff;
+border-radius:15px;
+padding:15px;
+margin-bottom:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.tx-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+}
+
+.tx-title{
+font-weight:bold;
+font-size:15px;
+}
+
+.tx-status{
+font-size:12px;
+padding:4px 10px;
+border-radius:10px;
+color:#fff;
+}
+
+/* STATUS COLORS */
+.pending{ background:#fbbf24; }
+.success{ background:#22c55e; }
+.failed{ background:#ef4444; }
+
+.tx-body{
+display:flex;
+justify-content:space-between;
+}
+
+.tx-amount{
+font-weight:bold;
+font-size:16px;
+}
+
+.tx-date{
+font-size:12px;
+color:#666;
+}
+</style>
+
+</head>
+
+<body>
+
+<!-- TOP -->
+<div class="topbar">
+<div class="back" onclick="history.back()">⬅</div>
+<div>Transactions</div>
+</div>
+
+<!-- SLIDER -->
+<div class="slider">
+<div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1508606572321-901ea443707f')"></div>
+<div class="slide" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e')"></div>
+<div class="slide" style="background-image:url('https://images.unsplash.com/photo-1517649763962-0c623066013b')"></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+<div class="tab active" onclick="showTab('gain')">Gain</div>
+<div class="tab" onclick="showTab('deposit')">Dépôt</div>
+<div class="tab" onclick="showTab('withdraw')">Retrait</div>
+</div>
+
+<!-- SECTIONS -->
+<div id="gainSection" class="section">
+<div id="gainList"></div>
+</div>
+
+<div id="depositSection" class="section" style="display:none;">
+<div id="depositList"></div>
+</div>
+
+<div id="withdrawSection" class="section" style="display:none;">
+<div id="withdrawList"></div>
+</div>
+
+<script>
+
+const client = supabase.createClient(
+"https://qixmtmfcscjkneodbvgx.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpeG10bWZjc2Nqa25lb2Ridmd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDY1NzUsImV4cCI6MjA5MDI4MjU3NX0.9rLqMeXfAKAC6GHt4SOe0sXjiEB7bfG5c_4PcI6gBu4"
+);
+
+/* USER */
+function getUser(){
+let user = JSON.parse(localStorage.getItem("user"));
+if(!user){
+window.location.href="login.html";
+return null;
+}
+return user;
+}
+
+/* FORMAT CARD */
+function formatTransaction(tx){
+
+let sign = "+";
+if(tx.type === "withdraw") sign = "-";
+
+let statusClass = "pending";
+if(tx.statut === "completed") statusClass = "success";
+if(tx.statut === "failed") statusClass = "failed";
+
+return `
+<div class="tx-card">
+
+  <div class="tx-header">
+    <div class="tx-title">${tx.type}</div>
+    <div class="tx-status ${statusClass}">${tx.statut}</div>
+  </div>
+
+  <div class="tx-body">
+    <div class="tx-amount">${sign}${tx.montant} FCFA</div>
+    <div class="tx-date">${new Date(tx.created_at).toLocaleString()}</div>
+  </div>
+
+</div>
+`;
+}
+
+/* LOAD */
+async function loadTransactions(){
+
+let user = getUser();
+if(!user) return;
+
+const { data } = await client
+.from("transactions")
+.select("*")
+.eq("user_id", user.id)
+.order("created_at", { ascending:false });
+
+let gainHTML = "";
+let depositHTML = "";
+let withdrawHTML = "";
+
+data.forEach(tx=>{
+
+if(tx.type === "deposit"){
+depositHTML += formatTransaction(tx);
+}
+
+else if(tx.type === "withdraw"){
+withdrawHTML += formatTransaction(tx);
+}
+
+else if(tx.type === "bonus" || tx.type === "commission" || tx.type === "daily_income"){
+gainHTML += formatTransaction(tx);
+}
+
+});
+
+document.getElementById("gainList").innerHTML = gainHTML || "<p>Aucune transaction</p>";
+document.getElementById("depositList").innerHTML = depositHTML || "<p>Aucune transaction</p>";
+document.getElementById("withdrawList").innerHTML = withdrawHTML || "<p>Aucune transaction</p>";
+
+}
+
+loadTransactions();
+
+/* TABS */
+function showTab(tab){
+
+document.getElementById("gainSection").style.display="none";
+document.getElementById("depositSection").style.display="none";
+document.getElementById("withdrawSection").style.display="none";
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+
+if(tab === "gain"){
+document.getElementById("gainSection").style.display="block";
+document.querySelectorAll(".tab")[0].classList.add("active");
+}
+
+if(tab === "deposit"){
+document.getElementById("depositSection").style.display="block";
+document.querySelectorAll(".tab")[1].classList.add("active");
+}
+
+if(tab === "withdraw"){
+document.getElementById("withdrawSection").style.display="block";
+document.querySelectorAll(".tab")[2].classList.add("active");
+}
+
+}
+
+/* SLIDER */
+let slides = document.querySelectorAll(".slide");
+let i = 0;
+
+setInterval(()=>{
+slides[i].classList.remove("active");
+i = (i + 1) % slides.length;
+slides[i].classList.add("active");
+},4000);
+
+</script>
+
+</body>
+</html>
